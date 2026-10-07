@@ -494,6 +494,25 @@ describe('normalizeCatchallRoutes', () => {
       expect(appPaths).toEqual(expected)
     })
 
+    it('does not combine a slot catch-all with a page from a sibling route group', () => {
+      const appPaths = {
+        '/': ['/(dashboard)/page'],
+        '/tasks': ['/(dashboard)/tasks/page'],
+        '/[...catchAll]': ['/(dashboard)/@modal/[...catchAll]/page'],
+        '/settings': ['/(settings)/settings/page'],
+      }
+
+      const { unmatchedAppPages } = normalizeCatchAllRoutes(appPaths, {
+        strictRouteMatching: true,
+        defaultAppPaths: ['/(dashboard)/@modal/default'],
+      })
+
+      // `/settings` never renders the `(dashboard)` layout, so its `@modal`
+      // slot cannot make that route incomplete.
+      expect(unmatchedAppPages).toEqual([])
+      expect(appPaths['/settings']).toEqual(['/(settings)/settings/page'])
+    })
+
     it('keeps slots owned by the immediate interception host through a route group', () => {
       const appPaths = {
         '/': ['/(host)/@modal/page', '/(host)/@modal/@sidebar/page'],
